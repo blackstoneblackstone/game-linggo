@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bingo</title>
+    <script src="http://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <style>
+      /* 背景样式 */
+      /* ---- reset ---- */
+      body {
+        margin: 0;
+        font: normal 75% Arial, Helvetica, sans-serif;
+        background-color: #043564;
+      }
+
+      canvas {
+        display: block;
+        vertical-align: bottom;
+      }
+
+      /* ---- particles.js container ---- */
+      #particles-js {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #043564;
+        background-image: url('http://vincentgarreau.com/particles.js/assets/img/kbLd9vb_new.gif');
+        background-repeat: no-repeat;
+        background-size: 60%;
+        background-position: 0 50%;
+        z-index: -1;
+      }
+
+      /* ---- stats.js ---- */
+      .count-particles {
+        background: #000022;
+        position: absolute;
+        top: 48px;
+        left: 0;
+        width: 80px;
+        color: #13e8e9;
+        font-size: 0.8em;
+        text-align: left;
+        text-indent: 4px;
+        line-height: 14px;
+        padding-bottom: 2px;
+        font-family: Helvetica, Arial, sans-serif;
+        font-weight: bold;
+      }
+
+      .js-count-particles {
+        font-size: 1.1em;
+      }
+
+      #stats,
+      .count-particles {
+        -webkit-user-select: none;
+        margin-top: 5px;
+        margin-left: 5px;
+      }
+
+      #stats {
+        border-radius: 3px 3px 0 0;
+        overflow: hidden;
+      }
+
+      .count-particles {
+        border-radius: 0 0 3px 3px;
+      }
+
+      /* 抽数字样式 */
+      #result {
+        font-size: 150px;
+        text-align: center;
+        margin: 120px 0;
+        color: #fff;
+      }
+
+      #drawButton {
+        width: 150px;
+        padding: 10px;
+        font-size: 32px;
+        margin: auto;
+        display: block;
+        color: #fff;
+        background: transparent;
+        border: none;
+        font-weight: bolder;
+      }
+
+      #drawnNumbers {
+        margin-top: 20px;
+        border-collapse: collapse;
+        width: 100%;
+        color: #fff;
+      }
+
+      #drawnNumbers th,
+      #drawnNumbers td {
+        border: none;
+        padding: 8px;
+        text-align: center;
+      }
+
+      #drawnNumbers,
+      #historyBody {
+        font-size: 24px;
+      }
+
+      .generated-by {
+        margin: 24px 0;
+        text-align: center;
+        bottom: 10px;
+        right: 10px;
+        z-index: 2;
+        color: white;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="result">?</div>
+    <button id="drawButton" onclick="toggleDraw()">开始</button>
+
+    <table id="drawnNumbers">
+      <thead>
+        <tr>
+          <th>历史记录</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+
+    <div class="generated-by">本页面代码由 ChatGPT 生成</div>
+
+    <div id="particles-js"></div>
+  </body>
+
+  <script>
+    window.onbeforeunload = function (e) {
+      return '';
+    };
+    // 抽奖
+    // 抽到的数字列表
+    var drawnNumbers = [];
+    var timerId = null;
+    var availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function updateHistory() {
+      var historyBody = document.getElementById('historyBody');
+      historyBody.innerHTML = '';
+      drawnNumbers.forEach(function (number) {
+        var tr = document.createElement('tr');
+        var td = document.createElement('td');
+        td.innerText = number;
+        tr.appendChild(td);
+        historyBody.insertBefore(tr, historyBody.firstChild);
+      });
+    }
+
+    function drawNumber() {
+      if (availableNumbers.length === 0) {
+        document.getElementById('drawButton').disabled = true; // Disable button
+        return; // No more numbers to draw
+      }
+      var index = getRandomInt(0, availableNumbers.length - 1);
+      var drawn = availableNumbers.splice(index, 1)[0];
+      drawnNumbers.push(drawn);
+      document.getElementById('result').innerText = drawn;
+      updateHistory();
+    }
+
+    function startRandomizing() {
+      var resultElement = document.getElementById('result');
+      timerId = setInterval(function () {
+        if (availableNumbers.length === 0) {
+          clearInterval(timerId);
+          document.getElementById('drawButton').innerText = '抽完了';
+          return;
+        }
+        var randomIndex = getRandomInt(0, availableNumbers.length - 1);
+        resultElement.innerText = availableNumbers[randomIndex];
+      }, 100);
+    }
+
+    function stopRandomizing() {
+      if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+        drawNumber();
+      }
+    }
+
+    function toggleDraw() {
+      var button = document.getElementById('drawButton');
+      if (timerId === null) {
+        startRandomizing();
+        button.innerText = '停';
+      } else {
+        stopRandomizing();
+        button.innerText = '开始';
+      }
+    }
+
+    // 画背景
+    particlesJS('particles-js', {
+      particles: {
+        number: { value: 100, density: { enable: false, value_area: 800 } },
+        color: { value: '#ffffff' },
+        shape: {
+          type: 'star',
+          stroke: { width: 0, color: '#000000' },
+          polygon: { nb_sides: 5 },
+          image: {
+            src: 'http://wiki.lexisnexis.com/academic/images/f/fb/Itunes_podcast_icon_300.jpg',
+            width: 100,
+            height: 100,
+          },
+        },
+        opacity: {
+          value: 0.5,
+          random: false,
+          anim: { enable: false, speed: 1, opacity_min: 0.1, sync: false },
+        },
+        size: {
+          value: 4,
+          random: true,
+          anim: { enable: false, speed: 40, size_min: 0.1, sync: false },
+        },
+        line_linked: {
+          enable: false,
+          distance: 150,
+          color: '#ffffff',
+          opacity: 0.4,
+          width: 1,
+        },
+        move: {
+          enable: true,
+          speed: 14,
+          direction: 'left',
+          random: false,
+          straight: true,
+          out_mode: 'out',
+          bounce: false,
+          attract: { enable: false, rotateX: 600, rotateY: 1200 },
+        },
+      },
+      interactivity: {
+        detect_on: 'canvas',
+        events: {
+          onhover: { enable: false, mode: 'grab' },
+          onclick: { enable: true, mode: 'repulse' },
+          resize: true,
+        },
+        modes: {
+          grab: { distance: 200, line_linked: { opacity: 1 } },
+          bubble: {
+            distance: 400,
+            size: 40,
+            duration: 2,
+            opacity: 8,
+            speed: 3,
+          },
+          repulse: { distance: 200, duration: 0.4 },
+          push: { particles_nb: 4 },
+          remove: { particles_nb: 2 },
+        },
+      },
+      retina_detect: true,
+    });
+  </script>
+</html>
